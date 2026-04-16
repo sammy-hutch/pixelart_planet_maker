@@ -17,7 +17,7 @@ x^2 + z^2 = 16
 So, for the layer of the sphere where y = 3, x^2 + z^2 = 16 for all possible permutations of x and z
 
 ## Traveling along the surface of the sphere
-At its most stretched perspective, pixels on the surface of the sphere are 1-unit distance apart. Thus, distance traveled between calculated points on surface of sphere should be 1unit on the circumference.
+At its most stretched perspective, pixels on the surface of the sphere are 1-unit distance apart. Thus, distance traveled between calculated points on surface of sphere should be 1 unit on the circumference.
 
 circumference (c) = 2 * pi * r
 Thus, for a known radius, we can divide the full rotation of the circle by the circumference to get the degrees (or radians) of how far to travel in one step.
@@ -43,3 +43,9 @@ so, we can calculate y-value of each layer of the sphere with :
 **y-value of vertical layer = sin(current_angle) * radius**
 
 where current angle is calculated as previous_angle + step_distance
+
+### Horizontal Travel
+For each vertical layer, we can calculate the radius of that layer (r_layer) using
+**r_layer = (r^2 - y^2)^0.5**
+
+Then, given that radius, we can calculate step distance same as before.
