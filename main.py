@@ -6,18 +6,20 @@ CENTER_VECT = {
     "x": 0.0,
     "z": 0.0
 }
-INIT_ANGLE = pi/2.0
-FINAL_ANGLE = -pi/2.0
 
 
-def plotter():
-    current_v_angle = INIT_ANGLE
+def surface_point_plotter():
+    init_v_angle = pi/2.0   # start from the top of the sphere
+    final_v_angle = -pi/2.0  # end at the bottom of the sphere, don't need to go further as horizontal layers cover full 360 degrees
+
+    current_v_angle = init_v_angle
     v_step_distance = 1.0 / RADIUS
     surface_points = [
         {"name": str(RADIUS)+"_"+str(0.0)+"_"+str(0.0), "y": RADIUS, "x": 0.0, "z": 0.0}
     ]
 
-    while current_v_angle > FINAL_ANGLE:
+    # iterate over vertical steps to create horizontal layers
+    while current_v_angle > final_v_angle:
         current_v_angle -= v_step_distance
         y_value = round(RADIUS * sin(current_v_angle), 2)
 
@@ -26,6 +28,7 @@ def plotter():
         h_layer_radius = (RADIUS**2 - y_value**2)**0.5
         h_layer_step_distance = 1.0 / h_layer_radius if h_layer_radius != 0 else 2 * pi
 
+        # iterate over horizontal steps to plot points on the current horizontal layer
         while current_h_layer_angle < max_h_layer_angle:
             x_value = round(h_layer_radius * sin(current_h_layer_angle), 2)
             z_value = round(h_layer_radius * cos(current_h_layer_angle), 2)
@@ -41,4 +44,4 @@ def plotter():
 
 
 if __name__ == "__main__":
-    plotter()
+    surface_point_plotter()
