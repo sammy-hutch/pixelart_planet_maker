@@ -1,4 +1,7 @@
 from math import pi, sin, cos
+import random
+
+### VARS
 
 RADIUS = 5.0
 CENTER_VECT = {
@@ -7,12 +10,66 @@ CENTER_VECT = {
     "z": 0.0
 }
 
+FRAMES = 36
+
+## Painting style parameters
+
+# Landmass style parameters
+LANDMASSES = True
+LAND_PCT = 0.3
+
+# Cracked style parameters
+CRACKED = True
+LAND_SIZE = 3
+
+# Scattered style parameters
+SCATTERED = True
+PRIMARY_PCT = 0.5
+
+# Band style parameters
+BANDS = True
+BAND_WIDTH = 3
+
+# River style parameters
+RIVERS = True
+RIVER_PCT = 0.2
+
+# Ice cap style parameters
+ICE_PCT = 0.1
+ICE_COLOR = (255, 255, 255, 1)  # White
+
+# Cloud style parameters
+CLOUD_PCT = 0.3
+CLOUD_STYLE = "fluffy"  # Options: "fluffy", "wispy"
+CLOUD_COLOR = (255, 255, 255, 0.8)  # Semi-transparent white
+
+# Ring style parameters
+RING_SIZE = 0
+RING_COLOR = (200, 200, 200, 0.5)  # Semi-transparent gray
+RING_ANGLE = 45
+RING_STYLE = "bands" # Options: "bands", "stacked"
+
+# Coloring style parameters
+PRIMARY_COLOR_1 = (0, 255, 0, 1)  # Green
+PRIMARY_COLOR_2 = (0, 0, 255, 1)  # Blue
+PRIMARY_COLOR_3 = (255, 0, 0, 1)  # Red
+
+SECONDARY_COLOR_1 = (255, 255, 0, 1)  # Yellow
+SECONDARY_COLOR_2 = (255, 0, 255, 1)  # Magenta
+SECONDARY_COLOR_3 = (0, 255, 255, 1)  # Cyan
+
+
+
+
 
 def planet_maker():
     surface_points = [
         {"name": str(RADIUS)+"_"+str(0.0)+"_"+str(0.0), 
          "y": RADIUS, "x": 0.0, "z": 0.0,
-         "neighbors": []}
+         "neighbors": [],
+         "point_type": "surface",
+         "land_type": "None",
+         "color": (0, 0, 0, 1)}
     ]
 
     # 1. Plot the points on the surface of the sphere
@@ -38,12 +95,11 @@ def planet_maker():
             z_value = round(h_layer_radius * cos(current_h_layer_angle), 2)
             surface_points.append({"name": str(y_value)+"_"+str(x_value)+"_"+str(z_value), 
                                    "y": y_value, "x": x_value, "z": z_value,
-                                   "neighbors": []})
+                                   "neighbors": [],
+                                   "point_type": "surface",
+                                   "land_type": "None",
+                                   "color": (0, 0, 0, 1)})
             current_h_layer_angle += h_layer_step_distance
-
-    # for surface_point in surface_points:
-    #     print(surface_point)
-    print(len(surface_points))
 
     
     # 2. Identify neighbouring points
@@ -54,8 +110,52 @@ def planet_maker():
                 if distance <= 1.45:
                     u["neighbors"].append(v["name"])
     
-    for surface_point in surface_points:
-        print(surface_point)
+    
+    # 3. Pattern planet (assign each point to primary or secondary color group)
+    points_to_pattern = len(surface_points)
+    points_to_check = surface_points.copy()
+
+    while points_to_pattern > 0:
+        point = random.choice(points_to_check)
+        point_index = surface_points.index(point)
+        primary_chance = 0.5
+
+        # Landmass logic: similarity to direct neighbours
+        if LANDMASSES:
+            primary_chance = LAND_PCT
+
+            # calculate modifiers: the more neighbors that are similar, 
+            # the more likely that way, but always non zero chance to go the opposite way
+            positive_modifier = (1 - primary_chance) / (len(point["neighbors"]) + 1) * 1.0
+            negative_modifier = primary_chance / (len(point["neighbors"]) + 1) * 1.0
+            for neighbor in surface_points[point_index]["neighbors"]:
+                neighbor_index = next(i for i, p in enumerate(surface_points) if p["name"] == neighbor)
+                if surface_points[neighbor_index]["land_type"] == "primary":
+                    primary_chance += positive_modifier
+                elif surface_points[neighbor_index]["land_type"] == "secondary":
+                    primary_chance -= negative_modifier
+
+        if primary_chance > random.random():
+            point["land_type"] = "primary"
+        else:
+            point["land_type"] = "secondary"
+        
+        points_to_pattern -= 1
+        # print(f"Patterned {point['name']} as {point['land_type']}, from primary_chance {primary_chance:.2f}: {points_to_pattern} points left to pattern")
+        points_to_check.remove(point)
+    
+    # primary_points = [point for point in surface_points if point["land_type"] == "primary"]
+    # secondary_points = [point for point in surface_points if point["land_type"] == "secondary"]
+    # for point in surface_points:
+    #     print(f"{point['name']}: {point['land_type']}")
+    # print(f"Primary points: {len(primary_points)}, Secondary points: {len(secondary_points)}")
+
+    # 4. Paint planet
+    for point in surface_points:
+        if point["land_type"] == "primary":
+            point["color"] = PRIMARY_COLOR_1
+        else:
+            point["color"] = SECONDARY_COLOR_1
     
 
 
