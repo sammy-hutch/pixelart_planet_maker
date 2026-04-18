@@ -16,7 +16,7 @@
     multiple patterns can be layered, so it should be possible to select multiple, and they should be ordered.
 
 - primary palette: selection of colours for use in primary
-    - primary color 1:  **PRIMARY_COLOR_1** (RGB)
+    - primary color 1:  **PRIMARY_COLOR_1** (RGBA)
     - primary color 2:  **PRIMARY_COLOR_2**
     etc..
 
@@ -39,7 +39,10 @@
 - rings?
     - if so, size?      **RING_SIZE**
     - and what color?   **RING_COLOR**
-    - and what angle?   **RING_ANGLE
+    - and what angle?   **RING_ANGLE**
+    - and what style?   **RING_STYLE**
+        - bands: rings sit on top of each other, extending out from surface of planet
+        - stacked: rings sit side-by side , same distance from surface of planet
 
 # painting flow
 
@@ -48,4 +51,12 @@
 3. paint on ice caps (overwrite existing colors)
 4. paint on clouds (opacity, so need to add colors together somehow)
 5. paint on rings (need separate prior logic to create ring points, as separate entity from surface points, or at least flagged as different type)
-6. dithering: small variations in each color for organic look
+6. dithering: small variations in each color for organic look. RGB is 0-255, so can adjust values by random amount in +- 5 for example
+
+# image creation flow
+
+given painted planet from painting flow step:
+1. take z-most point for each y-x value, and assign that color (RGBA) to the y-x coord in NumPy array. (if z-most point is some % opaque, also include points behind etc)
+2. Pillow PIL to map numpy array to png
+3. create gif from pngs sequenced (PIL can also make gifs)
+4. make spritesheet from pngs combined
