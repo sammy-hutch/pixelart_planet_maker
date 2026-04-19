@@ -1,4 +1,4 @@
-from math import pi, sin, cos
+from math import pi, sin, cos, radians, degrees
 import random
 
 ### VARS
@@ -44,9 +44,10 @@ CLOUD_STYLE = "fluffy"  # Options: "fluffy", "wispy"
 CLOUD_COLOR = (255, 255, 255, 0.8)  # Semi-transparent white
 
 # Ring style parameters
-RING_SIZE = 0
+RING_RADIUS_MIN = 5.0
+RING_RADIUS_MAX = 5.0
 RING_COLOR = (200, 200, 200, 0.5)  # Semi-transparent gray
-RING_ANGLE = 45
+RING_ANGLE = 45.0
 RING_STYLE = "bands" # Options: "bands", "stacked"
 
 # Coloring style parameters
@@ -150,6 +151,7 @@ def planet_maker():
     #     print(f"{point['name']}: {point['land_type']}")
     # print(f"Primary points: {len(primary_points)}, Secondary points: {len(secondary_points)}")
 
+
     # 4. Paint planet
     for point in surface_points:
         if point["land_type"] == "primary":
@@ -158,6 +160,20 @@ def planet_maker():
             point["color"] = SECONDARY_COLOR_1
     
 
+    # 5. Map planet to 2D array
+    
+    # Identify limits of image size
+    y_mod = max(RADIUS, RING_RADIUS_MAX * sin(radians(RING_ANGLE)))
+    x_mod = max(RADIUS, RING_RADIUS_MAX * cos(radians(RING_ANGLE)))
+    y_size = int(2 * y_mod) + 1
+    x_size = int(2 * x_mod) + 1
+    print(f"Image size: {x_size} x {y_size}")
+
+    # Map color and depth (z-value) to 2D array of pixel data (y-x), keeping only z-least point for each pixel
+    image_depth_map = [[{"color": (255, 255, 255, 0), "z": float(x_mod + 1)} for _ in range(x_size)] for _ in range(y_size)]
+    print(f"Image array initialized with size {len(image_depth_map)} x {len(image_depth_map[0])}")
+
+    # Map z-least points to y-x pixel coords
 
 if __name__ == "__main__":
     planet_maker()
