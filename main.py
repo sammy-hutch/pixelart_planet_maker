@@ -1,4 +1,5 @@
 from math import pi, sin, cos, radians, degrees
+from PIL import Image
 import random
 
 ### VARS
@@ -174,6 +175,16 @@ def planet_maker():
     print(f"Image array initialized with size {len(image_depth_map)} x {len(image_depth_map[0])}")
 
     # Map z-least points to y-x pixel coords
+    for point in surface_points:
+        y_pixel = int(round(point["y"]) + y_mod)
+        x_pixel = int(round(point["x"]) + x_mod)
+
+        if point["z"] < image_depth_map[y_pixel][x_pixel]["z"]:
+            image_depth_map[y_pixel][x_pixel]["color"] = point["color"]
+            image_depth_map[y_pixel][x_pixel]["z"] = point["z"]
+    
+    # Paint the image
+    image_array = [[image_depth_map[y][x]["color"] for x in range(x_size)] for y in range(y_size)]
 
 if __name__ == "__main__":
     planet_maker()
