@@ -4,7 +4,7 @@ import random
 
 ### VARS
 
-RADIUS = 5.0
+RADIUS = 10.0
 CENTER_VECT = {
     "y": 0.0,
     "x": 0.0,
@@ -37,28 +37,28 @@ RIVER_PCT = 0.2
 
 # Ice cap style parameters
 ICE_PCT = 0.1
-ICE_COLOR = (255, 255, 255, 1)  # White
+ICE_COLOR = (255, 255, 255, 255)  # White
 
 # Cloud style parameters
 CLOUD_PCT = 0.3
 CLOUD_STYLE = "fluffy"  # Options: "fluffy", "wispy"
-CLOUD_COLOR = (255, 255, 255, 0.8)  # Semi-transparent white
+CLOUD_COLOR = (255, 255, 255, 204)  # Semi-transparent white
 
 # Ring style parameters
 RING_RADIUS_MIN = 5.0
 RING_RADIUS_MAX = 5.0
-RING_COLOR = (200, 200, 200, 0.5)  # Semi-transparent gray
+RING_COLOR = (200, 200, 200, 124)  # Semi-transparent gray
 RING_ANGLE = 45.0
 RING_STYLE = "bands" # Options: "bands", "stacked"
 
 # Coloring style parameters
-PRIMARY_COLOR_1 = (0, 255, 0, 1)  # Green
-PRIMARY_COLOR_2 = (0, 0, 255, 1)  # Blue
-PRIMARY_COLOR_3 = (255, 0, 0, 1)  # Red
+PRIMARY_COLOR_1 = (0, 255, 0, 255)  # Green
+PRIMARY_COLOR_2 = (255, 255, 0, 255)  # Yellow
+PRIMARY_COLOR_3 = (255, 0, 0, 255)  # Red
 
-SECONDARY_COLOR_1 = (255, 255, 0, 1)  # Yellow
-SECONDARY_COLOR_2 = (255, 0, 255, 1)  # Magenta
-SECONDARY_COLOR_3 = (0, 255, 255, 1)  # Cyan
+SECONDARY_COLOR_1 = (0, 0, 255, 255)  # Blue
+SECONDARY_COLOR_2 = (255, 0, 255, 255)  # Magenta
+SECONDARY_COLOR_3 = (0, 255, 255, 255)  # Cyan
 
 
 
@@ -143,14 +143,7 @@ def planet_maker():
             point["land_type"] = "secondary"
         
         points_to_pattern -= 1
-        # print(f"Patterned {point['name']} as {point['land_type']}, from primary_chance {primary_chance:.2f}: {points_to_pattern} points left to pattern")
         points_to_check.remove(point)
-    
-    # primary_points = [point for point in surface_points if point["land_type"] == "primary"]
-    # secondary_points = [point for point in surface_points if point["land_type"] == "secondary"]
-    # for point in surface_points:
-    #     print(f"{point['name']}: {point['land_type']}")
-    # print(f"Primary points: {len(primary_points)}, Secondary points: {len(secondary_points)}")
 
 
     # 4. Paint planet
@@ -168,11 +161,9 @@ def planet_maker():
     x_mod = max(RADIUS, RING_RADIUS_MAX * cos(radians(RING_ANGLE)))
     y_size = int(2 * y_mod) + 1
     x_size = int(2 * x_mod) + 1
-    print(f"Image size: {x_size} x {y_size}")
 
     # Map color and depth (z-value) to 2D array of pixel data (y-x), keeping only z-least point for each pixel
     image_depth_map = [[{"color": (255, 255, 255, 0), "z": float(x_mod + 1)} for _ in range(x_size)] for _ in range(y_size)]
-    print(f"Image array initialized with size {len(image_depth_map)} x {len(image_depth_map[0])}")
 
     # Map z-least points to y-x pixel coords
     for point in surface_points:
@@ -185,6 +176,10 @@ def planet_maker():
     
     # Paint the image
     image_array = [[image_depth_map[y][x]["color"] for x in range(x_size)] for y in range(y_size)]
+    print(image_array)
+    img = Image.new('RGBA', (x_size, y_size))
+    img.putdata([pixel for row in image_array for pixel in row])
+    img.save("images/planet.png")
 
 if __name__ == "__main__":
     planet_maker()
