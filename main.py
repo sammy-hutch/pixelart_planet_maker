@@ -68,6 +68,8 @@ def planet_maker():
     surface_points = [
         {"name": str(RADIUS)+"_"+str(0.0)+"_"+str(0.0), 
          "y": RADIUS, "x": 0.0, "z": 0.0,
+         "h_angle": 0.0,
+         "h_layer_radius": 0.0,
          "neighbors": [],
          "point_type": "surface",
          "land_type": "None",
@@ -97,6 +99,8 @@ def planet_maker():
             z_value = round(h_layer_radius * cos(current_h_layer_angle), 2)
             surface_points.append({"name": str(y_value)+"_"+str(x_value)+"_"+str(z_value), 
                                    "y": y_value, "x": x_value, "z": z_value,
+                                   "h_angle": round(current_h_layer_angle, 3),
+                                   "h_layer_radius": round(h_layer_radius, 2),
                                    "neighbors": [],
                                    "point_type": "surface",
                                    "land_type": "None",
@@ -154,7 +158,7 @@ def planet_maker():
             point["color"] = SECONDARY_COLOR_1
     
 
-    # 5. Map planet to 2D array
+    # 5. Map planet to image, gif and spritesheet
     
     # Identify limits of image size
     y_mod = max(RADIUS, RING_RADIUS_MAX * sin(radians(RING_ANGLE)))
@@ -162,24 +166,44 @@ def planet_maker():
     y_size = int(2 * y_mod) + 1
     x_size = int(2 * x_mod) + 1
 
-    # Map color and depth (z-value) to 2D array of pixel data (y-x), keeping only z-least point for each pixel
-    image_depth_map = [[{"color": (255, 255, 255, 0), "z": float(x_mod + 1)} for _ in range(x_size)] for _ in range(y_size)]
+    rotate_step = (2.0 * pi) / FRAMES
+    rotation = 0.0
+    img_counter = 1
+    images = []
 
-    # Map z-least points to y-x pixel coords
-    for point in surface_points:
-        y_pixel = int(round(point["y"]) + y_mod)
-        x_pixel = int(round(point["x"]) + x_mod)
+    while rotation < 2.0 * pi:
+        # create "empty" image depth map template
+        image_depth_map = [[{"color": (255, 255, 255, 0), "z": float(x_mod + 1)} for _ in range(x_size)] for _ in range(y_size)]
 
-        if point["z"] < image_depth_map[y_pixel][x_pixel]["z"]:
-            image_depth_map[y_pixel][x_pixel]["color"] = point["color"]
-            image_depth_map[y_pixel][x_pixel]["z"] = point["z"]
+        # Map z-least points to y-x pixel coords
+        for point in surface_points:
+            y_pixel = int(round(point["y"]) + y_mod)
+            x_pixel = int(round(point["x"]) + x_mod)
+
+            if point["z"] < image_depth_map[y_pixel][x_pixel]["z"]:
+                image_depth_map[y_pixel][x_pixel]["color"] = point["color"]
+                image_depth_map[y_pixel][x_pixel]["z"] = point["z"]
+        
+        # Paint the image
+        img_name = "planet_" + str(img_counter) + ".png"
+        image_array = [[image_depth_map[y][x]["color"] for x in range(x_size)] for y in range(y_size)]
+        img = Image.new('RGBA', (x_size, y_size))
+        img.putdata([pixel for row in image_array for pixel in row])
+        img.save(f"images/{img_name}")
+        images.append(img)
+
+        # Rotate points for next frame
+        for point in surface_points:
+            new_angle = (point["h_angle"] + rotate_step) % (2.0 * pi)
+            point["x"] = round(point["h_layer_radius"] * sin(new_angle), 2)
+            point["z"] = round(point["h_layer_radius"] * cos(new_angle), 2)
+            point["h_angle"] = round(new_angle, 3)
+        
+        img_counter += 1
+        rotation += rotate_step
     
-    # Paint the image
-    image_array = [[image_depth_map[y][x]["color"] for x in range(x_size)] for y in range(y_size)]
-    print(image_array)
-    img = Image.new('RGBA', (x_size, y_size))
-    img.putdata([pixel for row in image_array for pixel in row])
-    img.save("images/planet.png")
+    images[0].save('images/planet.gif', save_all=True, append_images=images[1:], optimize=False, duration=100, loop=0)
+
 
 if __name__ == "__main__":
     planet_maker()
