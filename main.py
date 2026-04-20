@@ -4,14 +4,14 @@ import random
 
 ### VARS
 
-RADIUS = 10.0
+RADIUS = 16.0
 CENTER_VECT = {
     "y": 0.0,
     "x": 0.0,
     "z": 0.0
 }
 
-FRAMES = 36
+FRAMES = 144
 
 ## Painting style parameters
 
