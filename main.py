@@ -1,6 +1,7 @@
 from math import pi, sin, cos, radians, degrees
 from PIL import Image
 import random
+import collections
 
 ### VARS
 
@@ -73,7 +74,7 @@ def planet_maker():
          "neighbors": [],
          "point_type": "surface",
          "land_type": "None",
-         "color": (0, 0, 0, 1)}
+         "color": (0, 0, 0, 255)}
     ]
 
     # 1. Plot the points on the surface of the sphere
@@ -85,7 +86,6 @@ def planet_maker():
 
     # iterate over vertical steps to create horizontal layers
     while current_v_angle > final_v_angle:
-        current_v_angle -= v_step_distance
         y_value = round(RADIUS * sin(current_v_angle), 2)
 
         current_h_layer_angle = 0
@@ -104,17 +104,44 @@ def planet_maker():
                                    "neighbors": [],
                                    "point_type": "surface",
                                    "land_type": "None",
-                                   "color": (0, 0, 0, 1)})
+                                   "color": (0, 0, 0, 255)})
             current_h_layer_angle += h_layer_step_distance
+        
+        current_v_angle -= v_step_distance
 
     
-    # 2. Identify neighbouring points
-    for u in surface_points:
-        for v in surface_points:
-            if u["name"] != v["name"]:
-                distance = ((u["y"] - v["y"])**2 + (u["x"] - v["x"])**2 + (u["z"] - v["z"])**2)**0.5
-                if distance <= 1.45:
-                    u["neighbors"].append(v["name"])
+    # 2. Identify neighbouring points using spatial grid
+    neighbor_dist_threshold = 1.45
+    cell_size = neighbor_dist_threshold
+    spatial_grid = collections.defaultdict(list)
+    
+    # populate spatial grid
+    for i, point in enumerate(surface_points):
+        cx = int(point["x"] // cell_size)
+        cy = int(point["y"] // cell_size)
+        cz = int(point["z"] // cell_size)
+        spatial_grid[(cx, cy, cz)].append(i)
+    
+    # iterate through each point to find neighbors
+    for i, u_point in enumerate(surface_points):
+        cx = int(u_point["x"] // cell_size)
+        cy = int(u_point["y"] // cell_size)
+        cz = int(u_point["z"] // cell_size)
+
+        # check neighboring cells in the grid
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                for dz in [-1, 0, 1]:
+                    neighbor_cell = (cx + dx, cy + dy, cz + dz)
+                    if neighbor_cell in spatial_grid:
+                        for j in spatial_grid[neighbor_cell]:
+                            if i != j:
+                                v_point = surface_points[j]
+                                distance = ((u_point["y"] - v_point["y"])**2 + 
+                                            (u_point["x"] - v_point["x"])**2 + 
+                                            (u_point["z"] - v_point["z"])**2)**0.5
+                                if distance <= neighbor_dist_threshold:
+                                    u_point["neighbors"].append(v_point["name"])
     
     
     # 3. Pattern planet (assign each point to primary or secondary color group)
