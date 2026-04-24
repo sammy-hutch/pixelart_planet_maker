@@ -5,7 +5,7 @@ import collections
 
 ### VARS
 
-RADIUS = 16.0
+RADIUS = 10.0
 CENTER_VECT = {
     "y": 0.0,
     "x": 0.0,
@@ -17,8 +17,10 @@ FRAMES = 144
 ## Painting style parameters
 
 # Landmass style parameters
-LANDMASSES = True
-LAND_PCT = 0.3
+LANDMASSES = False       # patterns points into groups (land primary vs sea secondary)
+LAND_PCT = 0.3          # pct of points assigned to primary (land)
+SEARCH_DIST_PCT = 0.05  # pct of nearby points to search through when modifying point style chance
+SEARCH_DIST_COUNT = 2   # number of layers of nearby points to search through when modifying point style chance
 
 # Cracked style parameters
 CRACKED = True
@@ -34,7 +36,7 @@ BAND_WIDTH = 3
 
 # River style parameters
 RIVERS = True
-RIVER_PCT = 0.2
+RIVER_LAND_PCT = 0.95
 
 # Ice cap style parameters
 ICE_PCT = 0.1
@@ -167,6 +169,19 @@ def planet_maker():
                     primary_chance += positive_modifier
                 elif surface_points[neighbor_index]["land_type"] == "secondary":
                     primary_chance -= negative_modifier
+        
+        if RIVERS:
+            secondary_neighbor_count = 0
+            for neighbor in surface_points[point_index]["neighbors"]:
+                neighbor_index = next(i for i, p in enumerate(surface_points) if p["name"] == neighbor)
+                if surface_points[neighbor_index]["land_type"] == "secondary":
+                    secondary_neighbor_count += 1
+            if secondary_neighbor_count > 2:
+                primary_chance = 1
+            elif secondary_neighbor_count > 0:
+                primary_chance = 0
+            else:
+                primary_chance = RIVER_LAND_PCT
 
         if primary_chance > random.random():
             point["land_type"] = "primary"
@@ -175,7 +190,23 @@ def planet_maker():
         
         points_to_pattern -= 1
         points_to_check.remove(point)
+    
 
+    # 3.1. Solidify groups (convert lone points to the opposite group)
+    if LANDMASSES:
+        for point in surface_points:
+            matching_count = 0
+            point_index = surface_points.index(point)
+            for neighbor in surface_points[point_index]["neighbors"]:
+                neighbor_index = next(i for i, p in enumerate(surface_points) if p["name"] == neighbor)
+                if surface_points[neighbor_index]["land_type"] == point["land_type"]:
+                    matching_count += 1
+            if matching_count <= 1:
+                if point["land_type"] == "primary":
+                    point["land_type"] = "secondary"
+                elif point["land_type"] == "secondary":
+                    point["land_type"] = "primary"
+            
 
     # 4. Paint planet
     for point in surface_points:
